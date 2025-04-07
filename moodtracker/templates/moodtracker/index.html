@@ -1,0 +1,109 @@
+{% load static %}
+{% load mathfilters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMate</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Links for registration or anonymous access -->
+        <div class="auth-options">
+            {% if user.is_authenticated %}
+            <p>Welcome, {{ user.username }}!</p>
+            <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+            <a href="{% url 'register' %}">Register</a> | 
+            <a href="{% url 'login' %}">Login</a> |
+            <a href="{% url 'index' %}?anonymous=true">Continue as Guest</a>
+            {% endif %}
+        </div>
+
+        <h1>Welcome to MindHue!</h1>
+        <p>How are you feeling today?</p>
+
+        <form action="{% url 'index' %}" method="POST">
+            {% csrf_token %}
+            <label for="mood">Select your mood:</label>
+            <select id="mood" name="mood" required>
+                <option value="happy">Happy</option>
+                <option value="sad">Sad</option>
+                <option value="angry">Angry</option>
+                <option value="anxious">Anxious</option>
+                <option value="neutral">Neutral</option>
+            </select>
+
+            <label for="notes">Additional notes (optional):</label>
+            <textarea id="notes" name="notes"></textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Recent Moods</h2>
+        <ul>
+            {% for mood, detected_emotion in mood_data %}
+            <li>
+                <strong>{{ mood.mood }}</strong> - {{ mood.timestamp|date:"Y-m-d H:i" }} <br>
+                {{ mood.timestamp|date:"Y-m-d H:i" }} <br>
+                Notes: {{ mood.notes|linebreaks }} <br>
+                <strong>Detected Emotion:</strong> {{ detected_emotion }}
+            </li>
+            {% empty %}
+            <li>No moods recorded yet.</li>
+            {% endfor %}
+        </ul>
+
+
+        <!-- Mood Trend Chart -->
+        <div class="chart-container">
+            <canvas id="moodChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Add JavaScript to fetch and show mood data -->
+    <script>
+
+        var labels = JSON.parse('{{ labels|safe }}');
+        var mood_values = JSON.parse('{{ mood_values|safe }}');
+        
+        var ctx = document.getElementById('moodChart').getContext('2d');
+        
+        var moodChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Mood Trend',
+                    data: mood_values,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Mood Value (Numeric)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
