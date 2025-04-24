@@ -5,75 +5,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoodMate</title>
+    <title>MindHue</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Links for registration or anonymous access -->
+        <!-- Auth Options -->
         <div class="auth-options">
             {% if user.is_authenticated %}
-            <p>Welcome, {{ user.username }}!</p>
-            <a href="{% url 'logout' %}">Logout</a>
+                <p>Welcome, {{ user.username }}!</p>
+                <a href="{% url 'logout' %}">Logout</a>
             {% else %}
-            <a href="{% url 'register' %}">Register</a> | 
-            <a href="{% url 'login' %}">Login</a> |
-            <a href="{% url 'index' %}?anonymous=true">Continue as Guest</a>
+                <a href="{% url 'register' %}">Register</a> | 
+                <a href="{% url 'login' %}">Login</a> |
+                <a href="{% url 'index' %}?anonymous=true">Continue as Guest</a>
             {% endif %}
         </div>
 
-        <h1>Welcome to MindHue!</h1>
-        <p>How are you feeling today?</p>
+         <!-- Fixed Tab Bar -->
+    <div class="tab-bar">
+        <a href="{% url 'index' %}" class="tab-icon active"><i class="fas fa-comment-dots"></i><br>Chat</a>
+        <a href="#moodChart" class="tab-icon"><i class="fas fa-chart-line"></i><br>Chart</a>
+    </div>
 
-        <form action="{% url 'index' %}" method="POST">
-            {% csrf_token %}
-            <label for="mood">Select your mood:</label>
-            <select id="mood" name="mood" required>
-                <option value="happy">Happy</option>
-                <option value="sad">Sad</option>
-                <option value="angry">Angry</option>
-                <option value="anxious">Anxious</option>
-                <option value="neutral">Neutral</option>
-            </select>
+        <h1>
+            <i class="fab fa-mendeley" style="color: #1583f9; margin-right: 8px;"></i>
+            MindHue
+        </h1>
+        <h2>Speak Your Mind</h2>
 
-            <label for="notes">Additional notes (optional):</label>
-            <textarea id="notes" name="notes"></textarea>
+        <!-- Chatbot UI -->
+        <div class="chatbot">
+            <div class="chat-history">
+                {% for mood, detected_emotion in mood_data %}
+                    <div class="user-message">
+                        <div class="bubble user-bubble">
+                            {{ mood.notes }}
+                            <div class="timestamp">{{ mood.timestamp|date:"M d, Y h:i A" }}</div>
+                        </div>
+                    </div>
+                    <div class="bot-response">
+                        <div class="bubble ai-bubble">
+                            <strong>Huey:</strong> You seem to be feeling <em>{{ detected_emotion|title }}</em>.<br>
+                            {{ mood.advice }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
 
-            <button type="submit">Submit</button>
-        </form>
+            <form action="{% url 'index' %}" method="POST" class="chat-input">
+                {% csrf_token %}
+                <textarea name="notes" placeholder="Tell me how you're feeling..." required></textarea>
+                <button type="submit">Send</button>
+            </form>
+        </div>
 
-        <h2>Recent Moods</h2>
-        <ul>
-            {% for mood, detected_emotion in mood_data %}
-            <li>
-                <strong>{{ mood.mood }}</strong> - {{ mood.timestamp|date:"Y-m-d H:i" }} <br>
-                {{ mood.timestamp|date:"Y-m-d H:i" }} <br>
-                Notes: {{ mood.notes|linebreaks }} <br>
-                <strong>Detected Emotion:</strong> {{ detected_emotion }}
-            </li>
-            {% empty %}
-            <li>No moods recorded yet.</li>
-            {% endfor %}
-        </ul>
-
-
-        <!-- Mood Trend Chart -->
-        <div class="chart-container">
-            <canvas id="moodChart"></canvas>
+        <!-- Mood Chart Section -->
+        <div class="chart-container" style="position: relative; height: 40vh; width: 80vw;" id="moodChart">
+            <canvas></canvas>
         </div>
     </div>
 
-    <!-- Add Chart.js -->
+    <!-- Toast -->
+    {% if submitted %}
+    <div id="toast" class="toast">Mood saved!</div>
+    {% endif %}
+
+    <!-- Mood Trend Chart Script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Add JavaScript to fetch and show mood data -->
     <script>
-
         var labels = JSON.parse('{{ labels|safe }}');
         var mood_values = JSON.parse('{{ mood_values|safe }}');
-        
-        var ctx = document.getElementById('moodChart').getContext('2d');
-        
+
+        var ctx = document.querySelector('#moodChart canvas').getContext('2d');
         var moodChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -90,20 +95,181 @@
                 responsive: true,
                 scales: {
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+                        title: { display: true, text: 'Date' }
                     },
                     y: {
-                        title: {
-                            display: true,
-                            text: 'Mood Value (Numeric)'
-                        }
+                        title: { display: true, text: 'Mood Value (Numeric)' }
                     }
                 }
             }
         });
+
+        // Smooth scroll to chat/chart sections
+        document.querySelectorAll('.tab-icon').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const target = this.getAttribute('href');
+                if (target.startsWith('#')) {
+                    e.preventDefault();
+                    document.querySelector(target).scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Tab active state on scroll
+        const chatTab = document.querySelector('.tab-bar a[href="{% url "index" %}"]');
+        const chartTab = document.querySelector('.tab-bar a[href="#moodChart"]');
+        const chartSection = document.getElementById('moodChart');
+
+        window.addEventListener('scroll', () => {
+            const chartTop = chartSection.getBoundingClientRect().top;
+            if (chartTop <= window.innerHeight / 2) {
+                chatTab.classList.remove('active');
+                chartTab.classList.add('active');
+            } else {
+                chartTab.classList.remove('active');
+                chatTab.classList.add('active');
+            }
+        });
+        window.dispatchEvent(new Event('scroll'));
+
+        // Auto-scroll to latest message
+        window.onload = () => {
+            const history = document.querySelector('.chat-history');
+            if (history) history.scrollTop = history.scrollHeight;
+        };
+
+
     </script>
+
+    <!-- Toast Script -->
+    {% if submitted %}
+    <script>
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+    </script>
+    {% endif %}
+
+
+    <!-- Inline Styles -->
+    <style>
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            background-color: #edf2f7;
+            padding: 10px 0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .chatbot {
+            margin-top: 3rem;
+            margin-bottom: 5rem;
+        }
+
+        .chat-history {
+            background-color: #f7fafc;
+            border-radius: 10px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* User and AI Messages (chat bubbles) */
+        .message {
+            display: flex;
+            max-width: 75%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            justify-content: flex-end;
+        }   
+
+        .message.ai {
+            align-self: flex-start;
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        .user-bubble {
+            background-color: #1583f9d2;
+            color: #0a0b0b;
+            text-align: right;
+            border-bottom-right-radius: 0;
+        }
+
+        .ai-bubble {
+            background-color: #e2e8f0;
+            color: #1a202c;
+            border-bottom-left-radius: 0;
+        }
+
+        .timestamp {
+            font-size: 0.75rem;
+            color: #53565a;
+            margin-top: -6px;
+            margin-bottom: 6px;
+            text-align: right;
+        }
+
+        .chat-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-input textarea {
+             width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e0;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .chat-input button {
+            align-self: flex-end;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #2b6cb0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2b6cb0;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: none;
+        }
+    </style>
 </body>
 </html>

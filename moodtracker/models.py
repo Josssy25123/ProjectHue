@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 # Define a model to store mood data
 class Mood(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # Add user relation
-    anonymous_id = models.CharField(max_length=32, null=True, blank=True)
+    anonymous_id = models.CharField(max_length=64, null=True, blank=True)
 
     mood_choices = [
         ('happy', 'Happy'),
@@ -13,9 +13,10 @@ class Mood(models.Model):
         ('anxious', 'Anxious'),
         ('neutral', 'Neutral'),
     ]
-    
-    mood = models.CharField(max_length=10, choices=mood_choices)
-    notes = models.TextField(null=True, blank=True)  # Optional notes for extra info
+
+    emotion = models.CharField(max_length=50, default="unknown")
+    notes = models.TextField()  # Optional notes for extra info
+    advice = models.TextField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)  # Automatically adds the timestamp
 
     def __str__(self):
