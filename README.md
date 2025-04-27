@@ -78,4 +78,4 @@ Project Poster:
 
 Project Demo:
 
-<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/1a1fe613503d4e978504fd330be8f769?sid=8754bd4e-fd97-470c-8562-7069605204ea" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+<div class=Project Demo><iframe src="https://www.loom.com/embed/1a1fe613503d4e978504fd330be8f769?sid=8754bd4e-fd97-470c-8562-7069605204ea" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
