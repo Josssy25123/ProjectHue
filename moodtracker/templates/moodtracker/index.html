@@ -33,22 +33,35 @@
             <i class="fab fa-mendeley" style="color: #1583f9; margin-right: 8px;"></i>
             MindHue
         </h1>
-        <h2>Speak Your Mind</h2>
 
         <!-- Chatbot UI -->
         <div class="chatbot">
             <div class="chat-history">
-                {% for mood, detected_emotion in mood_data %}
-                    <div class="user-message">
+                {% if show_greeting %}
+                    <div class="bot-response">
+                        <div class="bubble ai-bubble">
+                            <strong>Huey:</strong> Speak your mind...
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% for mood, detected_emotion, song_link, podcast_link in mood_data %}
+                    <div class="user-message message user">
                         <div class="bubble user-bubble">
                             {{ mood.notes }}
                             <div class="timestamp">{{ mood.timestamp|date:"M d, Y h:i A" }}</div>
                         </div>
                     </div>
-                    <div class="bot-response">
+                    <div class="bot-response message ai">
                         <div class="bubble ai-bubble">
                             <strong>Huey:</strong> You seem to be feeling <em>{{ detected_emotion|title }}</em>.<br>
-                            {{ mood.advice }}
+                            {{ mood.advice }}<br>
+                            {% if song_link %}
+                                <p><strong>Recommended Song:</strong><a href="{{ song_link }}" target="_blank">{{ song_link }}</a></p>
+                            {% endif %}
+                            {% if podcast_link %}
+                                <p><strong>Recommended Podcast:</strong><a href="{{ podcast_link }}" target="_blank">{{ podcast_link }}</a></p>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -62,8 +75,10 @@
         </div>
 
         <!-- Mood Chart Section -->
-        <div class="chart-container" style="position: relative; height: 40vh; width: 80vw;" id="moodChart">
-            <canvas></canvas>
+        <div class="chart-wrapper">
+            <div class="chart-container" style="position: relative; height: 40vh; width: 80vw;" id="moodChart">
+                <canvas></canvas>
+            </div>
         </div>
     </div>
 
@@ -93,6 +108,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         title: { display: true, text: 'Date' }
@@ -221,6 +237,21 @@
             border-bottom-left-radius: 0;
         }
 
+        .recommendation-link {
+            display: inline-block;
+            margin-top: 4px;
+            padding: 6px 10px;
+            background-color: #1db954;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .recommendation-link:hover {
+            background-color: #14833b;
+        }
+
         .timestamp {
             font-size: 0.75rem;
             color: #53565a;
@@ -256,6 +287,25 @@
 
         .chat-input button:hover {
             background-color: #2b6cb0;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 2rem;
+            margin-bottom: 5rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        #moodChart canvas {
+            width: 100%;
+            height: 100%;
         }
 
         .toast {

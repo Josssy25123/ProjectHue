@@ -14,10 +14,14 @@ class Mood(models.Model):
         ('neutral', 'Neutral'),
     ]
 
+
+
     emotion = models.CharField(max_length=50, default="unknown")
     notes = models.TextField()  # Optional notes for extra info
     advice = models.TextField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)  # Automatically adds the timestamp
+    song_link = models.URLField(null=True, blank=True)
+    podcast_link = models.URLField(null=True, blank=True)
 
     def __str__(self):
         user_display = self.user.username if self.user else f"Anonymous ({self.anonymous_id})"

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -107,7 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 
@@ -128,6 +130,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-SPOTIPY_CLIENT_ID = '8a87e5f7afdc489f8ae4cffa28554665'
-SPOTIPY_CLIENT_SECRET = 'fa4716f3187d4766b45c3cb3c4bdc01b'
-SPOTIPY_REDIRECT_URL = 'http://127.0.0.1:8000/'
+SPOTIPY_CLIENT_ID = config('SPOTIPY_CLIENT_ID')
+SPOTIPY_CLIENT_SECRET = config('SPOTIPY_CLIENT_SECRET')
+SPOTIPY_REDIRECT_URI = config('SPOTIPY_REDIRECT_URI')
