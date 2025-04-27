@@ -78,4 +78,4 @@ Project Poster:
 
 Project Demo:
 
-![1a1fe613503d4e978504fd330be8f769-b369cf51b30df178-full-play](https://github.com/user-attachments/assets/6a9d8407-94a4-4f7d-abb6-376b80dabab7)
+<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/1a1fe613503d4e978504fd330be8f769?sid=8754bd4e-fd97-470c-8562-7069605204ea" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
