@@ -8,19 +8,18 @@ MindHue is an AI-powered mental health web application that helps users reflect 
 
 [cosc490 SFP.pptx](https://github.com/user-attachments/files/19927216/cosc490.SFP.pptx)
 
-## Setup Instructions
+## Setup Instructions (Windows)
 
 1. **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/MindHue.git
+    git clone https://github.com/josssy25123/MindHue.git
     cd MindHue
     ```
 
 2. **Create a Virtual Environment**
     ```bash
     python -m venv venv
-    source venv/bin/activate  # MacOS/Linux
-    venv\Scripts\activate     # Windows
+    venv\Scripts\activate    
     ```
 
 3. **Install Dependencies**
