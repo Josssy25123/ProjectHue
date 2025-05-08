@@ -10,4 +10,5 @@ urlpatterns = [
     #path('logout/', LogoutView.as_view(), name='logout'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', views.custom_logout, name='logout'),
+    path('connect-spotify/', views.connect_spotify, name='connect_spotify'),
 ]

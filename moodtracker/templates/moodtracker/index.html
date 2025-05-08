@@ -21,13 +21,14 @@
                 <a href="{% url 'login' %}">Login</a> |
                 <a href="{% url 'index' %}?anonymous=true">Continue as Guest</a>
             {% endif %}
+            <a href="{% url 'connect_spotify' %}" class="spotify_btn">Connect to Spotify</a>
         </div>
 
-         <!-- Fixed Tab Bar -->
-    <div class="tab-bar">
-        <a href="{% url 'index' %}" class="tab-icon active"><i class="fas fa-comment-dots"></i><br>Chat</a>
-        <a href="#moodChart" class="tab-icon"><i class="fas fa-chart-line"></i><br>Chart</a>
-    </div>
+        <!-- Fixed Tab Bar -->
+        <div class="tab-bar">
+            <a href="{% url 'index' %}" class="tab-icon active"><i class="fas fa-comment-dots"></i><br>Chat</a>
+            <a href="#moodChart" class="tab-icon"><i class="fas fa-chart-line"></i><br>Chart</a>
+        </div>
 
         <h1>
             <i class="fab fa-mendeley" style="color: #1583f9; margin-right: 8px;"></i>
@@ -55,12 +56,18 @@
                     <div class="bot-response message ai">
                         <div class="bubble ai-bubble">
                             <strong>Huey:</strong> You seem to be feeling <em>{{ detected_emotion|title }}</em>.<br>
-                            {{ mood.advice }}<br>
+                            {{ mood.advice }}
                             {% if song_link %}
-                                <p><strong>Recommended Song:</strong><a href="{{ song_link }}" target="_blank">{{ song_link }}</a></p>
+                                <div class="recommendation-link-container">
+                                    <strong>Recommended Song:</strong>
+                                    <a class="recommendation-link" href="{{ song_link }}" target="_blank">Listen</a>
+                                </div>
                             {% endif %}
                             {% if podcast_link %}
-                                <p><strong>Recommended Podcast:</strong><a href="{{ podcast_link }}" target="_blank">{{ podcast_link }}</a></p>
+                                <div class="recommendation-link-container">
+                                    <strong>Recommended Podcast:</strong>
+                                    <a class="recommendation-link" href="{{ podcast_link }}" target="_blank">Listen</a>
+                                </div>
                             {% endif %}
                         </div>
                     </div>
@@ -87,7 +94,7 @@
     <div id="toast" class="toast">Mood saved!</div>
     {% endif %}
 
-    <!-- Mood Trend Chart Script -->
+    <!-- Scripts for chart and interaction -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         var labels = JSON.parse('{{ labels|safe }}');
@@ -153,11 +160,8 @@
             const history = document.querySelector('.chat-history');
             if (history) history.scrollTop = history.scrollHeight;
         };
-
-
     </script>
 
-    <!-- Toast Script -->
     {% if submitted %}
     <script>
         const toast = document.getElementById('toast');
@@ -167,7 +171,6 @@
         }
     </script>
     {% endif %}
-
 
     <!-- Inline Styles -->
     <style>

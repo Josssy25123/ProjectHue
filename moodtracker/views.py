@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+import urllib.parse
 from .models import Mood
 from .emotion_detector import detect_emotion
 from .spotify_auth import get_song_link_based_on_mood, get_podcast_link_based_on_mood
@@ -44,16 +45,19 @@ def index(request):
     
     # Try refreshing if no valid token
     if not access_token and refresh_token:
-        access_token = refresh_access_token(refresh_token)
-        if access_token:
+        refreshed = refresh_access_token(refresh_token)
+        if refreshed and 'access_token' in refreshed:
+            access_token = refreshed['access_token']
             request.session['spotify_access_token'] = access_token
+            print("✅ Refreshed Spotify access token:", access_token)
         else:
+            print("❌ Failed to refresh Spotify token.")
             access_token = None
-
 
     emotion_label = None
     song_link = None
     podcast_link = None
+    chat_response = None
 
     if request.method == "POST":
         notes = request.POST.get('notes', '')
@@ -64,22 +68,36 @@ def index(request):
 
             # Refresh Spotify token before using
             refresh_token = request.session.get('spotify_refresh_token')
+
             refreshed = refresh_access_token(refresh_token)
+            print("Raw refresh response:", refreshed)
 
             access_token = None
             if refreshed and 'access_token' in refreshed:
                 access_token = refreshed.get('access_token')
                 request.session['spotify_access_token'] = access_token
-                print("Refreshed Access Token:", access_token)
-                test_spotify_token(access_token)
+                print("Refreshed Spotify access token:", access_token)
+            else:
+                print("No access token received. Refresh failed or missing token")
 
 
             if access_token:
+                print("Access token being used:", access_token)
+
                 song_link = get_song_link_based_on_mood(emotion_label, access_token)
                 podcast_link = get_podcast_link_based_on_mood(emotion_label, access_token)
-            else:
-                song_link = None
-                podcast_link = None
+
+            print("Detected Emotion:", emotion_label)
+            print("Advice:", advice)
+            print("Song:", song_link)
+            print("Podcast:", podcast_link)
+
+            # Create response message
+            chat_response = f"Huey: You seem to be feeling {emotion_label.capitalize()}.\n{advice}"
+            if song_link:
+                chat_response += f"\nHere's a song you might like: {song_link}"
+            if podcast_link:
+                chat_response += f"\nAnd a podcast that may help: {podcast_link}"
 
 
             Mood.objects.create(
@@ -92,6 +110,9 @@ def index(request):
                 podcast_link=podcast_link
             )
 
+
+            # Store chat response temporarily and redirect
+            request.session['chat_response'] = chat_response
             return redirect('index')
 
     # Get mood entries
@@ -101,7 +122,6 @@ def index(request):
         moods = Mood.objects.filter(anonymous_id=anonymous_id).order_by('timestamp')
 
     mood_data = [(m, m.emotion, m.song_link, m.podcast_link) for m in moods]
-
     labels = [m.timestamp.strftime('%b %d %I:%M %p') for m in moods]
     mood_values = [
         {
@@ -115,26 +135,32 @@ def index(request):
         for m in moods
     ]
 
+    # Pull response from session if available
+    chat_response = request.session.pop('chat_response', None)
+
     context = {
         'labels': json.dumps(labels),
         'mood_values': json.dumps(mood_values),
         'mood_data': mood_data,
-        'show_greeting': len(moods) == 0
+        'show_greeting': len(moods) == 0,
+        'chat_response': chat_response,
     }
 
     code = request.GET.get('code')
     if code:
         token_data = exchange_code_for_token(code)
-        access_token = token_data.get('access_token')
-        request.session['spotify_access_token'] = access_token
+        print("Code exchange result:", token_data)
 
+        access_token = token_data.get('access_token')
         refresh_token = token_data.get('refresh_token')
+
+        request.session['spotify_access_token'] = access_token
         request.session['spotify_refresh_token'] = refresh_token
 
         if access_token:
             # Place Spotify profile code here
             headers = {
-                "Authorization": f"Bearer {access_token}"
+                'Authorization': f'Bearer {access_token}'
             }
 
             response = requests.get("https://api.spotify.com/v1/me", headers=headers)
@@ -153,10 +179,9 @@ def exchange_code_for_token(code):
     data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://127.0.0.1:8000/',  # must match your app's settings in Spotify
+        'redirect_uri': 'http://127.0.0.1:8000/',  # must match app's settings in Spotify
     }
     auth = (settings.SPOTIPY_CLIENT_ID, settings.SPOTIPY_CLIENT_SECRET)
-
     response = requests.post(url, data=data, auth=auth)
     return response.json()
 
@@ -177,9 +202,9 @@ def custom_logout(request):
     logout(request)
     return redirect('login')
 
-def test_spotify_token(token):
+def test_spotify_token(access_token):
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {access_token}"
     }
     response = requests.get("https://api.spotify.com/v1/me", headers=headers)
     print("Status Code:", response.status_code)
@@ -194,5 +219,16 @@ def refresh_access_token(refresh_token):
     auth = (settings.SPOTIPY_CLIENT_ID, settings.SPOTIPY_CLIENT_SECRET)
     response = requests.post(url, data=data, auth=auth)
     return response.json()
+
+def connect_spotify(request):
+    query_params = {
+        'client_id': settings.SPOTIPY_CLIENT_ID,
+        'response_type': 'code',
+        'redirect_uri': 'http://127.0.0.1:8000/',
+        'scope': 'user-read-private',
+        'show_dialog': 'true'
+    }
+    url = 'https://accounts.spotify.com/authorize?' + urllib.parse.urlencode(query_params)
+    return redirect(url)
 
 

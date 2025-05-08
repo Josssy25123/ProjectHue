@@ -1,5 +1,6 @@
 import random
 import requests
+import traceback
 import base64
 import spotipy
 from django.conf import settings
@@ -42,8 +43,8 @@ def get_song_link_based_on_mood(mood, access_token=None):
             return "https://open.spotify.com/track/5qmq61DAAOUaW8AUo8xKhh"  # Fallback song link
     except Exception as e:
         print(f"Error fetching song for mood '{mood}': {e}")
+        traceback.print_exc()
         return "https://open.spotify.com/track/5qmq61DAAOUaW8AUo8xKhh"  # Fallback
-
 
 # Podcasts
 def get_podcast_link_based_on_mood(mood, access_token=None):
@@ -75,9 +76,8 @@ def get_podcast_link_based_on_mood(mood, access_token=None):
             return "https://open.spotify.com/show/6kAsbP8pxwaU3bDWe0es5T"  # Fallback podcast link
     except Exception as e:
         print(f"Error fetching podcast for mood '{mood}': {e}")
+        traceback.print_exc()
         return "https://open.spotify.com/show/6kAsbP8pxwaU3bDWe0es5T"  # Fallback
-
-
 
 # Refresh access token
 def refresh_access_token(refresh_token):
@@ -94,7 +94,6 @@ def refresh_access_token(refresh_token):
 
     if response.status_code == 200:
         return response.json()
-        print("Access token right now:", access_token)
     else:
         print("Failed to refresh Spotify access token:", response.json())
         return None
